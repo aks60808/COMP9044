@@ -1,0 +1,17 @@
+#!/bin/dash
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: create a the repository called '.legit' to iniate the project
+# written in 14/07/2019
+
+if [ -d ".legit" ]
+then
+    echo "legit-init: error: .legit already exists"
+else
+    mkdir '.legit'
+    mkdir '.legit/repo/'
+    mkdir '.legit/repo/master'
+    mkdir '.legit/repo/master/index'
+    echo 'Initialized empty legit repository in .legit'
+    echo 'master' > '.legit/branch_log.txt'
+fi

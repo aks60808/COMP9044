@@ -1,0 +1,31 @@
+#!/bin/dash
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: add the file from current directory to .legit/index (stagging area)
+# written in 14/07/2019
+
+if [ ! -d '.legit' ]
+then
+    echo "$0: error: no .legit directory containing legit repository exists"
+    exit 1
+fi
+branch=`cat .legit/branch_log.txt`
+if [ ! -d ".legit/repo/$branch/index" ]
+then
+    mkdir ".legit/repo/$branch/index"
+fi
+for file in "$@"
+do
+    if [ -f $file ]
+    then
+	cp "$file" ".legit/repo/$branch/index/$file"
+    elif [ -f ".legit/repo/$branch/index/$file" ]
+    then
+	rm ".legit/repo/$branch/index/$file"
+    else
+	echo "$0: error: can not open '$file'"
+    fi
+done	 
+
+	   
+

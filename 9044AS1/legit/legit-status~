@@ -1,0 +1,63 @@
+#!/bin/dash
+getlistoffiles=`ls -aBR | sort |uniq`
+filelist=".legit/filelist.txt"
+echo "$getlistoffiles" > "$filelist"
+sed -i '1d' "$filelist"
+sed -i '/\./d' "$filelist"
+sed -i '/commit_msg.txt/d' "$filelist"
+sed -i '/filelist.txt/d' "$filelist"
+
+if [ -f .legit/branch_log.txt ]
+then
+    branch=`cat .legit/branch_log.txt`
+else
+    branch="master"
+fi
+
+current=`ls -1 .legit/repo/$branch/commit | tail -1`
+
+while read file
+do
+    if [ -f "$file" ]
+    then
+	if [ ! -f .legit/repo/$branch/index/$file ]
+	then
+	    echo "$file - untracked"
+	elif [ -f .legit/repo/$branch/index/$file -a -f .legit/repo/$branch/commit/$current/$file ]
+	then
+	    if cmp -s $file .legit/repo/$branch/index/$file
+	    then
+		if cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		then
+		    echo "$file - same as repo"
+		elif ! cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		then
+		    echo "$file - file changed, changes staged for commit"
+		fi
+	    elif ! cmp -s $file .legit/repo/$branch/index/$file
+	    then
+		if cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		then
+		    echo "$file - file changed, changes not staged for commit"
+		elif ! cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		then
+		    echo "$file - file changed, different changes staged for commit"
+		fi
+	    fi
+	elif  [ -f .legit/repo/$branch/index/$file -a ! -f .legit/repo/$branch/commit/$current/$file ]
+	then
+	    echo "$file - added to index"
+	fi
+    elif [ ! -f $file ]
+    then
+	if [ -f .legit/repo/$branch/index/$file -a -f .legit/repo/$branch/commit/$current/$file ]
+	then
+	   echo "$file - file deleted"
+	elif [ ! -f .legit/repo/$branch/index/$file -a -f .legit/repo/$branch/commit/$current/$file ]
+	then
+	    echo "$file - deleted"
+        fi
+    fi
+done < "$filelist"
+
+

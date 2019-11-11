@@ -1,0 +1,80 @@
+#!/usr/bin/perl -w
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: create a branch version
+# written in 14/07/2019
+
+use File::Path;
+use File::Copy;
+my $branch_name;
+$input= @ARGV + 0;
+
+if ( ! -d ".legit"){
+    print "error: should initiate the .legit first!!!\n";
+    exit 1
+}
+
+if ( $input == 0){
+    if ( ! -e ".legit/branch_list.txt"){	
+	print "legit-branch: error: your repository does not have any commits yet\n";
+	exit 1;
+    }
+    else{
+	my @folders=<.legit/repo/*>;
+	my @sort_folders = sort @folders;
+	foreach my $folder(@sort_folders){
+	    $folder =~ /repo\/(.*)$/g;
+	    my $foldername = $1;
+	    print "$foldername\n";
+	}
+	exit 1;
+    }
+}
+elsif ( $input == 1){
+    $branch_name = $ARGV[0];
+    if ( -d ".legit/repo/$branch_name" ){
+	print "legit-branch: error: branch '$branch_name' already exists\n";
+	exit 1;
+    }
+    elsif ( ! -d ".legit/repo/$branch_name" ){
+	mkdir ".legit/repo/$branch_name";
+	mkdir ".legit/repo/$branch_name/index";
+	mkdir ".legit/repo/$branch_name/commit";
+	mkdir ".legit/repo/$branch_name/commit/0";
+	my $current_m = 0;
+        my @current_folders = <.legit/repo/master/commit/*>;
+	foreach my $current_folder(@current_folders){
+	    $current_folder =~ /commit\/(\d+)$/;
+	    $number = $1;
+	    if ($number > $current_m){
+		$current_m = $number;
+	    }
+	}
+	my @files_m =<.legit/repo/master/commit/$current_m/*>;
+	foreach my $file_m(@files_m){
+	    $file_m =~ /commit\/(\d+)\/(.*)$/;
+	    my $filename_m = $2;
+	    copy("$file_m",".legit/repo/$branch_name/commit/0/$filename_m");
+	    copy("$file_m",".legit/repo/$branch_name/index/$filename_m");
+	}
+    }
+}
+elsif ( $input == 2){
+    $branch_name = $ARGV[1];
+    if ( $ARGV[0] eq "-d" and ! -d ".legit/repo/$branch_name" ){
+	print "legit-branch: error: branch '$branch_name' does not exist\n";
+	exit 1;
+    }
+    elsif ( $ARGV[0] eq "-d" and $branch_name eq "master" ){
+	print "legit-branch: error: can not delete branch 'master'\n";
+	exit 1;
+    }
+    elsif  ( $ARGV[0] eq "-d" and -d ".legit/repo/$branch_name" ){
+	rmtree ".legit/repo/$branch_name";
+	print "Deleted branch '$branch_name'\n";
+    }
+}
+open my $data,">>", ".legit/branch_list.txt" or die "cant output the data";
+print $data "$branch_name";
+
+    

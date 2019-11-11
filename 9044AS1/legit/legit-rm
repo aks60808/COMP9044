@@ -1,0 +1,133 @@
+#!/bin/dash
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: remove the file from cached or cached + workingdir
+# written in 14/07/2019
+
+forced=0
+cached=0
+current=`ls -1 .legit/repo/master/commit | tail -1`
+
+for argv in $@
+do
+    if [ $argv = "--force" ]
+    then
+	forced=1
+    elif [ $argv = "--cached" ]
+    then
+	cached=1
+    fi
+done
+
+if [ -f ".legit/branch_log.txt" ]
+then
+    branch=`cat .legit/branch_log.txt`
+else
+    branch="master"
+fi
+
+for file in $@
+do
+    if [ $file != "--force" -a $file != "--cached" ]
+    then
+	if [ $cached -eq 0 -a $forced -eq 0 ]
+	then
+	    if [ -f $file -a -f .legit/repo/$branch/index/$file -a -f .legit/repo/$branch/commit/$current/$file ]
+	    then		
+		if ! cmp -s $file .legit/repo/$branch/index/$file  && cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		then
+		    echo "$0: error: '$file' in repository is different to working file"
+		    exit 1
+		elif ! cmp -s $file .legit/repo/$branch/index/$file  && ! cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		then
+		    echo "$0: error: '$file' in index is different to both working file and repository"
+		    exit 1
+		elif cmp -s $file .legit/repo/$branch/index/$file  && ! cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		then
+		    echo "$0: error: '$file' has changes staged in the index"
+		    exit 1
+		fi
+	    elif [ -f $file -a -f .legit/repo/$branch/index/$file -a ! -f .legit/repo/$branch/commit/$current/$file ]
+	    then
+		echo "$0: error: '$file' has changes staged in the index"
+		exit 1
+	    elif [ -f $file -a ! -f .legit/repo/$branch/index/$file -a ! -f .legit/repo/$branch/commit/$current/$file ]
+	    then
+		echo "$0: error: '$file' is not in the legit repository"
+		exit 1
+	    fi
+	elif [ $cached -eq 1 -a $forced -eq 0 ]
+	then
+	     if [ -f $file -a -f .legit/repo/$branch/index/$file -a -f .legit/repo/$branch/commit/$current/$file ]
+	     then
+		 if ! cmp -s $file .legit/repo/$branch/index/$file  && ! cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+	         then
+        	     echo "$0: error: '$file' in index is different to both working file and repository"
+		     exit 1
+		 fi
+	     elif [ -f $file -a ! -f .legit/repo/$branch/index/$file -a ! -f .legit/repo/$branch/commit/$current/$file ]
+	     then
+		 echo "$0: error: '$file' is not in the legit repository"
+		 exit 1
+	     fi
+	elif [ $forced -eq 1 -a $cached -eq 0 ]
+	then
+	    if [ ! -f .legit/repo/$branch/index/$file ]
+	    then	       
+		echo "$0: error: '$file' is not in the legit repository"
+		exit 1
+	    fi
+       fi
+    fi
+done
+for file in $@
+do
+    if [ $file != "--force" -a $file != "--cached" ]
+    then
+	if [ $cached -eq 0 -a $forced -eq 0 ]
+	then
+	    if [ -f $file -a -f .legit/repo/$branch/index/$file -a -f .legit/repo/$branch/commit/$current/$file ]
+	    then		
+		if cmp -s $file .legit/repo/$branch/commit/$current/$file
+		then
+		    rm $file
+		    rm .legit/repo/$branch/index/$file
+		fi
+	    fi
+	elif [ $cached -eq 1 -a $forced -eq 0 ]
+	then
+	     if [ -f $file -a -f .legit/repo/$branch/index/$file -a -f .legit/repo/$branch/commit/$current/$file ]
+	     then
+		 if cmp -s $file .legit/repo/$branch/index/$file || cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		 then
+		     rm .legit/repo/$branch/index/$file
+		 fi
+	     elif [ -f $file -a -f .legit/repo/$branch/index/$file -a ! -f .legit/repo/$branch/commit/$current/$file ]
+	     then
+		 if cmp -s $file .legit/repo/$branch/index/$file || cmp -s .legit/repo/$branch/index/$file .legit/repo/$branch/commit/$current/$file
+		 then
+		     rm .legit/repo/$branch/index/$file
+		 fi
+	     fi
+	elif [ $forced -eq 1 -a $cached -eq 0 ]
+	then
+	    if [ -f .legit/repo/$branch/index/$file -a -f $file ]
+	    then	    
+		rm .legit/repo/$branch/index/$file
+		rm $file
+	    elif [ -f .legit/repo/$branch/index/$file ]
+	    then	       
+		rm .legit/repo/$branch/index/$file
+	    fi
+	elif [ $forced -eq 1 -a $cached -eq 1 ]
+	then
+	    if [ -f .legit/repo/$branch/index/$file ]
+	    then
+		rm .legit/repo/$branch/index/$file
+	    fi
+	fi
+    fi
+done
+	
+
+   

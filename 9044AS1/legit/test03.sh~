@@ -1,0 +1,14 @@
+#!/bin/dash
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: error test for branch and status
+# written in 14/07/2019
+
+rm -r .legit #just in case
+./legit-init 
+touch a b c
+./legit-branch b1
+./legit-status # error occured : didn't create such folders inside commit cause ls error - ls: cannot access .legit/repo/master/commit: No such file or directory
+echo "done the script - passed"
+rm -r .legit
+rm a b c

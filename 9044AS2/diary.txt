@@ -1,0 +1,7 @@
+30/07/19     10:30   15:20	coding			building the frontend section - login.js and signup.js
+06/08/19.    9:00    23:59	coding                  pass the lv 0 autotest now doing lv 1 
+07/08/19.    10:00.  23:59      coding                  pass lv 1 now lv2 add some feature such as auto login in   
+08/08/19.    10:00.  23:59.     Coding                  pass lv2 now doing lv3 ( 50%   working  on the userapge )
+09/08/19.    16:00.  23:59.     Coding + debug          working on search pass almost 60% of lv3.
+10/08/19.    12:30.  23:00.     Coding + debug          finished the lv3 and UI
+11/08/19.    12:00.  23:59.     Organising              Structure and styling the program       

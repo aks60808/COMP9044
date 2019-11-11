@@ -1,0 +1,10 @@
+#!/bin/dash
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: read the commit_log
+# written in 14/07/2019
+
+if [ -e ".legit/commit_msg.txt" ]
+then    
+    cat ".legit/commit_msg.txt"
+fi

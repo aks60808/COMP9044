@@ -1,0 +1,107 @@
+#!/bin/dash
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: check the index isn't empty then writen the commit_log finally copy files from .legit/index to .legit/commit/(times)
+# written in 14/07/2019
+
+getlistoffiles=`ls -aBR | sort |uniq`
+filelist=".legit/filelist.txt"
+echo "$getlistoffiles" > "$filelist"
+sed -i '1d' "$filelist"
+sed -i '/\./d' "$filelist"
+sed -i '/commit_msg.txt/d' "$filelist"
+sed -i '/filelist.txt/d' "$filelist"
+msgfile=".legit/commit_msg.txt"
+dif=0
+
+if [ -f '.legit/branch_log.txt' ]
+then
+    branch=`cat .legit/branch_log.txt`
+else
+    branch="master"
+fi
+
+if [ $# -eq 3 -a $1 = "-a" ] 
+then 
+    msg="$3"
+    for file in ".legit/repo/$branch/index/"*
+    do
+	filename=`echo "$file" | cut -d '/' -f5`
+	if [ -f $filename ]
+	then
+	    cp "$filename" "$file"
+	else
+	    rm "$file"
+	fi
+    done
+else
+    msg="$2"
+fi
+emptyindex=`ls .legit/repo/$branch/index | wc -l`
+if [ ! -e $msgfile ]
+then
+    if [ $emptyindex -eq 0 ]
+    then
+	echo "nothing to commit"
+	exit 1
+    fi
+    i=0
+    echo "0 $msg" >> "$msgfile"
+    echo "Committed as commit 0"
+    mkdir ".legit/repo/master/commit"
+    mkdir ".legit/repo/master/commit/$i"
+else
+    i=`cat "$msgfile" | cut -d ' ' -f1 | head -1`
+    current=`ls .legit/repo/$branch/commit | tail -1`
+    while read file
+    do
+	if [ -e ".legit/repo/$branch/index/$file" -a -e ".legit/repo/$branch/commit/$current/$file" -a -e "$file" ]
+	then
+	    if cmp -s "$file" ".legit/repo/$branch/index/$file"
+	    then
+		cmp -s ".legit/repo/$branch/index/$file" ".legit/repo/$branch/commit/$current/$file" || dif=1
+	    fi 
+	elif [ ! -e ".legit/repo/$branch/index/$file" -a  -e ".legit/repo/$branch/commit/$current/$file" -a ! -e "$file" ]
+	then
+	    dif=1
+	elif [ ! -e ".legit/repo/$branch/index/$file" -a -e ".legit/repo/$branch/commit/$current/$file" -a -e "$file" ]
+        then
+	    dif=1
+	elif [ -e ".legit/repo/$branch/index/$file" -a ! -e ".legit/repo/$branch/commit/$current/$file" -a -e "$file" ]
+	then
+	    if cmp -s "$file" ".legit/repo/$branch/index/$file"
+	    then
+		dif=1
+	    fi
+	fi
+  
+    done < $filelist
+
+	
+    if [ $dif -eq 0 ]
+    then
+	echo "nothing to commit"
+	exit 1
+    fi
+    i=`expr $i + 1`
+    sed -i "1 i\
+$i $msg" "$msgfile"
+    echo "Committed as commit $i"
+    current=`expr $current + 1`
+    mkdir ".legit/repo/$branch/commit/$current"
+fi
+
+
+for file in ".legit/repo/$branch/index/"*
+do
+    current=`ls .legit/repo/$branch/commit | tail -1`
+    if [ $emptyindex -ne 0 ]
+    then
+        filename=`echo "$file" | cut -d '/' -f5`
+	cp "$file" ".legit/repo/$branch/commit/$current/$filename"
+    fi
+done
+    
+rm $filelist
+
+

@@ -1,0 +1,38 @@
+#!/bin/dash
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: grap the commit_num and filename from command line then read the specific file in the folder specific commit_num
+# written in 14/07/2019
+
+cmit_ind=`echo "$1"|cut -d ':' -f1`
+file=`echo "$1"|cut -d ':' -f2`
+
+if [ -f ".legit/branch_log.txt" ]
+then
+    branch=`cat .legit/branch_log.txt`
+else
+    branch="master"
+fi
+
+if [ "$cmit_ind" = '' ]
+then
+    if [ -f ".legit/repo/$branch/index/$file" ]
+    then
+	cat ".legit/repo/$branch/index/$file"
+    else
+	echo "$0: error: '$file' not found in index"
+	exit 1
+    fi
+else
+    if [ ! -d ".legit/repo/master/commit/$cmit_ind" ]
+    then
+	echo "$0: error: unknown commit '$cmit_ind'"
+	exit 1
+    elif [ -f ".legit/repo/master/commit/$cmit_ind/$file" ]
+    then
+	cat ".legit/repo/master/commit/$cmit_ind/$file"
+    else
+	echo "$0: error: '$file' not found in commit $cmit_ind"
+	exit 1
+    fi
+fi

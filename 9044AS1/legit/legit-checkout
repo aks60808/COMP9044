@@ -1,0 +1,85 @@
+#!/usr/bin/perl -w
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: compared the file from working dir, current_branch_index and current_branch_repo. then switch to the assign branch
+# written in 14/07/2019
+
+use File::Copy;
+use File::Compare;
+
+if ( ! -d ".legit/repo/$ARGV[0]" ){
+    print "legit-checkout: error: unknown branch '$ARGV[0]'\n";
+    exit 1;
+}
+my $branch_log = ".legit/branch_log.txt";
+my @commit_folders = <.legit/repo/$ARGV[0]/commit/*>;
+my $new = 0;
+
+foreach my $commit_folder(@commit_folders){
+    $commit_folder =~ /commit\/(\d+)$/;
+    my $number = $1;
+    if ($number > $new){
+	$new = $number;
+    }    
+}
+
+open my $in, "<", $branch_log or die "cant open the file : $branch_log";
+my $current_branch;
+while (my $name_branch = <$in>){
+    chomp $name_branch;
+    $current_branch = $name_branch;
+}
+if ( $current_branch eq $ARGV[0] ){
+    print "Already in $ARGV[0]\n";
+    exit();
+}
+my $current = 0;
+my @current_folders = <.legit/repo/$current_branch/commit/*>;
+foreach my $current_folder(@current_folders){
+    $current_folder =~ /commit\/(\d+)$/;
+    my $current_number = $1;
+    if ($current_number > $current){
+	$current = $current_number;
+    }
+}
+my @files = <.legit/repo/$current_branch/commit/$current/*>;
+foreach my $file(@files){
+    $file =~ /commit\/(\d+)\/(.*)$/;
+    my $filename = $2;
+    if ( ! -e ".legit/repo/$ARGV[0]/commit/$new/"){
+	unlink $filename;
+    }
+    elsif ( -e ".legit/repo/$ARGV[0]/commit/$new/"){
+	my $localvsindex = compare("$filename", ".legit/repo/$current_branch/index/$filename");
+	my $repovsindex = compare("$file", ".legit/repo/$current_branch/index/$filename");
+	if ($localvsindex == 0 and $repovsindex != 0){
+	    copy("$filename", ".legit/repo/$ARGV[0]/index/$filename");
+	}
+	elsif ($localvsindex == 0 and $repovsindex == 0){
+	    unlink ".legit/repo/$ARGV[0]/index/$filename";
+	    unlink "$filename";
+	}
+    }
+}
+
+close $branch_log;
+
+	
+open my $out, ">", $branch_log or die "can't open or create branch_log\n";
+print $out "$ARGV[0]";
+close $branch_log;
+print "Switched to branch '$ARGV[0]'\n";
+
+
+my @files_new = <.legit/repo/$ARGV[0]/commit/$new/*>;
+foreach my $file_new(@files_new){
+    $file_new =~ /commit\/(\d+)\/(.*)$/;
+    my $filename_new = $2;
+    if ( ! -e "$filename_new"){
+	copy("$file_new","$filename_new");
+    }
+    if ( ! -e ".legit/repo/$ARGV[0]/index/$filename_new"){
+	copy("$file_new", ".legit/repo/$ARGV[0]/index/$filename_new");
+    }
+}
+

@@ -1,0 +1,22 @@
+#!/bin/dash
+# author: Heng-Chuan Lin (z5219960@unsw.edu.au)
+# class: 9041 soft-con
+# file description: 
+# written in 14/07/2019
+if [ -d .legit ]
+then
+    rm -r .legit #just in case
+fi
+./legit-init
+touch a
+./legit-add a
+./legit-commit -m first
+./legit-branch b1
+./legit-checkout master # should say its already in master!!! ---fixed
+echo 'something' > a
+./legit-checkout b1
+cat a
+cat .legit/repo/b1/index/a
+./legit-commit -a -m sec # should commit successfully but got nothing to commit
+./legit-checkout master
+echo "done the script - passed"
